@@ -3,7 +3,7 @@
  * YANGILANGAN: GPT-4o-mini + Iterative Deepening + Bug fixes
  *
  * O'rnatish:
- *   npm install express socket.io-client tough-cookie node-fetch mongoose openai dotenv
+ *   npm install express socket.io-client tough-cookie node-fetch openai dotenv
  *
  * Ishlatish:
  *   .env fayliga sozlamalarni yozing yoki environment o'zgaruvchilari
@@ -17,7 +17,15 @@ const path       = require("path");
 const fs         = require("fs");
 const { io }     = require("socket.io-client");
 const { CookieJar } = require("tough-cookie");
-const mongoose   = require("mongoose");
+const FILE_DB = path.join(__dirname, "db.json");
+
+function loadDb() {
+  try { return JSON.parse(fs.readFileSync(FILE_DB, "utf8")); }
+  catch { return { games: [] }; }
+}
+function saveDb(data) {
+  fs.writeFileSync(FILE_DB, JSON.stringify(data, null, 2));
+}
 
 let _fetch;
 async function getFetch() {
@@ -36,7 +44,6 @@ const CFG = {
   port:       parseInt(process.env.PORT  || "3000"),
   moveDelay:  150,
   pingMs:     30_000,
-  mongoUri:   process.env.MONGO_URI || "mongodb://localhost:27017/shess",
   ua: "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 Telegram-Android/12.6.3",
 
   // GitHub Models / GPT-4o-mini
@@ -46,51 +53,34 @@ const CFG = {
   gptModel:      "openai/gpt-4o-mini",
 };
 
-// ─── MONGOOSE ─────────────────────────────────────────────────────────────────
-const StepSchema = new mongoose.Schema({
-  n: Number, side: String, from: [Number], to: [Number], cap: Boolean, board: Array,
-});
-const GameHistorySchema = new mongoose.Schema({
-  gameCode:    { type: String, unique: true },
-  userId:      String, userName: String, opponent: String,
-  myPlayerNum: Number, myPieces: Number, oppPieces: Number,
-  result:      { type: String, enum: ["win", "loss", "draw", "ongoing"] },
-  steps:       [StepSchema],
-  startedAt:   Date, endedAt: Date, eloChange: Number,
-  timestamp:   { type: Date, default: Date.now },
-});
-const GameHistory = mongoose.model("GameHistory", GameHistorySchema);
-
+// ─── JSON FILE DB ─────────────────────────────────────────────────────────────
 async function connectDB() {
-  try {
-    await mongoose.connect(CFG.mongoUri);
-    log("✅ MongoDB ulandi");
-  } catch(e) { log(`⚠️ MongoDB uddalay olmadi: ${e.message}`); }
+  log("✅ JSON file DB ishga tushdi");
 }
 
 async function createGameDocument(code, myPlayerNum) {
-  if (!mongoose.connection.readyState || !code) return;
-  try {
-    await GameHistory.findOneAndUpdate(
-      { gameCode: code },
-      { userId: state.userId, userName: state.name || "Bot", myPlayerNum, startedAt: new Date(), result: "ongoing" },
-      { upsert: true }
-    );
-  } catch(e) { log(`⚠️ Game create: ${e.message}`); }
+  if (!code) return;
+  const db = loadDb();
+  const gameIndex = db.games.findIndex(g => g.gameCode === code);
+  const game = { gameCode: code, userId: state.userId, userName: state.name || "Bot", myPlayerNum, result: "ongoing", steps: [], startedAt: new Date().toISOString() };
+  if (gameIndex >= 0) db.games[gameIndex] = game;
+  else db.games.push(game);
+  saveDb(db);
 }
 
 async function saveStep(code, step) {
-  if (!mongoose.connection.readyState) return;
-  try { await GameHistory.findOneAndUpdate({ gameCode: code }, { $push: { steps: step } }); }
-  catch(e) { log(`⚠️ Step save: ${e.message}`); }
+  if (!code) return;
+  const db = loadDb();
+  const game = db.games.find(g => g.gameCode === code);
+  if (game) { game.steps.push(step); saveDb(db); }
 }
 
 async function saveGameResult(code, result, eloChange) {
-  if (!mongoose.connection.readyState) return;
-  try {
-    await GameHistory.findOneAndUpdate({ gameCode: code }, { result, eloChange, endedAt: new Date() });
-    log(`💾 O'yin tugadi: ${code} (${result})`);
-  } catch(e) { log(`⚠️ Saqlash: ${e.message}`); }
+  if (!code) return;
+  const db = loadDb();
+  const game = db.games.find(g => g.gameCode === code);
+  if (game) { game.result = result; game.eloChange = eloChange; game.endedAt = new Date().toISOString(); saveDb(db); }
+  log(`💾 O'yin tugadi: ${code} (${result})`);
 }
 
 // ─── LOG ──────────────────────────────────────────────────────────────────────
@@ -937,10 +927,10 @@ app.post("/api/time", (req, res) => {
   else res.json({ ok: false });
 });
 app.get("/api/history", async (req, res) => {
-  if (!mongoose.connection.readyState) return res.json({ ok: false, msg: "MongoDB ulanmagan" });
   try {
+    const db = loadDb();
     const limit = parseInt(req.query.limit) || 50;
-    const games = await GameHistory.find().sort({ timestamp: -1 }).limit(limit).lean();
+    const games = db.games.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, limit);
     res.json({ ok: true, games });
   } catch(e) { res.status(500).json({ ok: false, msg: e.message }); }
 });
@@ -997,3 +987,5 @@ async function main() {
 }
 
 main().catch(e => { console.error(e.stack); process.exit(1); });
+
+module.exports = app;
