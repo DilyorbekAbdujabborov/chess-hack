@@ -1,0 +1,5 @@
+node_modules/
+.env
+req_log.txt
+data.json
+*.log

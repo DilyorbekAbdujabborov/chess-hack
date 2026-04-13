@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shashka">
+    <link rel="apple-touch-icon" href="/static/icon-180.png">
+    <title>Shashka - Profil</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
+    <script src="/static/js/translations.js?v=1774965388846"></script>
+    <script src="/static/js/common-init.js?v=1774965388846"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f8;
+            min-height: 100vh;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ── TOP NAV ── */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .nav-back {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #667eea;
+            font-size: 16px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 28px 20px 24px;
+            text-align: center;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: -30px;
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 3px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 34px;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .hero-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-id {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-bio-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 5px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-bio-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.65);
+            font-style: italic;
+        }
+        .hero-bio-text.empty {
+            color: rgba(255,255,255,0.3);
+        }
+        .edit-bio-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 6px;
+            transition: color 0.2s;
+        }
+        .edit-bio-btn:hover { color: rgba(255,255,255,0.8); }
+        .hero-bio-edit {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-bio-edit input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 13px;
+            padding: 5px 10px;
+            outline: none;
+            width: 200px;
+        }
+        .hero-bio-save { background: #22c55e; border: none; border-radius: 8px; color: #fff; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+        .hero-bio-cancel { background: rgba(255,255,255,0.15); border: none; border-radius: 8px; color: #fff; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+
+        /* ── STATS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .stat-card .icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 16px;
+        }
+
+        .stat-card.win   .icon { background: #e8f8f0; color: #28a745; }
+        .stat-card.lose  .icon { background: #fdecea; color: #dc3545; }
+        .stat-card.draw  .icon { background: #fff3e0; color: #ff9800; }
+        .stat-card.rating .icon { background: #ede7f6; color: #7c3aed; }
+        .stat-card.gems  .icon { background: #fce4ec; color: #e91e63; }
+        .stat-card.refs  .icon { background: #e3f2fd; color: #1976d2; }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #222;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        /* ── WIN RATE ── */
+        .winrate-card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .winrate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .winrate-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .winrate-percent {
+            font-size: 13px;
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        /* ── SECTION CARD ── */
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .dot {
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* ── NAME EDIT ── */
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-row input {
+            flex: 1;
+            padding: 11px 14px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #333;
+            transition: border-color 0.2s;
+            background: #fafafa;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .btn-save {
+            padding: 11px 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+
+        .btn-save:active { transform: scale(0.97); }
+        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .msg {
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .msg.success { background: #e8f8f0; color: #1a7a42; border-left: 3px solid #28a745; }
+        .msg.error   { background: #fdecea; color: #b71c1c; border-left: 3px solid #dc3545; }
+
+        /* ── REFERRAL ── */
+        .ref-bonus {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f3f0ff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+
+        .ref-bonus-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #ede7f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .ref-bonus-text {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .ref-bonus-text strong { color: #7c3aed; }
+
+        .ref-link-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ref-link-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 9px;
+            font-size: 11px;
+            background: #fafafa;
+            color: #555;
+            min-width: 0;
+        }
+
+        .btn-copy {
+            padding: 10px 14px;
+            background: #ede7f6;
+            color: #7c3aed;
+            border: none;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .btn-copy:active { background: #d1c4e9; }
+
+        .btn-share {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-share:active { opacity: 0.85; }
+
+        .copy-toast {
+            display: none;
+            margin-top: 8px;
+            padding: 9px 14px;
+            background: #e8f8f0;
+            color: #1a7a42;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* ── RULES ── */
+        .rules-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .rules-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .rules-list li .rule-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: #fdecea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .rules-warning {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #7d5e00;
+            line-height: 1.5;
+        }
+
+        /* ── BOTTOM BTN ── */
+        .btn-home {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: white;
+            color: #667eea;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            border: 2px solid #e8e8ff;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-home:active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* ── HERO NAME EDIT ── */
+        .hero-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 4px;
+        }
+        .edit-name-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: rgba(255,255,255,0.85);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .edit-name-btn:active { background: rgba(255,255,255,0.35); }
+        .hero-name-edit {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-name-edit input {
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(255,255,255,0.5);
+            color: white;
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+            width: 180px;
+        }
+        .hero-name-edit input::placeholder { color: rgba(255,255,255,0.5); }
+        .hero-save-btn, .hero-cancel-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .hero-save-btn   { background: #28a745; color: white; }
+        .hero-cancel-btn { background: rgba(255,255,255,0.2); color: white; }
+
+        /* ── CHANGE AVATAR BTN ── */
+        .change-avatar-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.85);
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            transition: background 0.2s;
+        }
+        .change-avatar-btn:active { background: rgba(255,255,255,0.25); }
+
+        /* ── PREMIUM MODAL ── */
+        .premium-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .premium-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+        .premium-box {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 2px solid #f5c518;
+            border-radius: 20px;
+            padding: 36px 32px 28px;
+            text-align: center;
+            width: 280px;
+            box-shadow: 0 0 40px rgba(245,197,24,0.3), 0 8px 32px rgba(0,0,0,0.5);
+            animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .premium-crown {
+            font-size: 52px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 12px rgba(245,197,24,0.8));
+            animation: float 2.5s ease-in-out infinite;
+        }
+        .premium-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #f5c518;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(245,197,24,0.5);
+        }
+        .premium-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .premium-text strong { color: #f5c518; }
+        .premium-close-btn {
+            background: linear-gradient(135deg, #f5c518, #e6a800);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 32px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(245,197,24,0.4);
+            transition: transform 0.15s;
+        }
+        .premium-close-btn:active { transform: scale(0.96); }
+        .premium-buy-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(34,197,94,0.4);
+            transition: transform 0.15s;
+        }
+        .premium-buy-btn:active { transform: scale(0.96); }
+
+        @keyframes popIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes float {
+            0%,100% { transform: translateY(0);    }
+            50%      { transform: translateY(-6px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* ── PREMIUM TOOLS ── */
+        .premium-tools-box {
+            background: linear-gradient(135deg, #fefce8, #fff8e1);
+            border: 1.5px solid rgba(245,158,11,0.3);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+        }
+        .premium-tools-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #b45309;
+            margin-bottom: 10px;
+        }
+        .premium-tools-row {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .premium-tools-row:last-child { border-bottom: none; }
+        .premium-tools-top { display: flex; align-items: center; justify-content: space-between; }
+        .premium-tools-label { font-size: 13px; font-weight: 600; color: #444; }
+        .premium-tools-hint { font-size: 11px; color: #92400e; margin-top: 5px; line-height: 1.4; opacity: 0.85; }
+        .premium-tools-notice {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245,158,11,0.12);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #92400e;
+            margin-bottom: 12px;
+        }
+        .premium-tool-toggle.locked { cursor: pointer; opacity: 0.45; }
+        .premium-tool-toggle.locked .toggle-track { background: #ccc; }
+        .premium-tool-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        .toggle-track {
+            display: block;
+            width: 42px; height: 24px;
+            border-radius: 12px;
+            background: #ddd;
+            position: relative;
+            transition: background 0.25s;
+        }
+        .toggle-thumb {
+            display: block;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 3px; left: 3px;
+            transition: left 0.25s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .premium-tool-toggle.active .toggle-track { background: #f59e0b; }
+        .premium-tool-toggle.active .toggle-thumb { left: 21px; }
+
+        /* ── AVATAR LIGHTBOX ── */
+        .avatar-lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+            cursor: zoom-out;
+        }
+        .avatar-lightbox.active {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+        .avatar-lightbox img {
+            max-width: 85vw;
+            max-height: 85vh;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+            object-fit: contain;
+            animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 360px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-value { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- TOP NAV -->
+    <div class="top-nav">
+        <a href="/" class="nav-back" aria-label="Orqaga">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <span class="nav-title" data-i18n="profile">Profil</span>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="avatar" onclick="openAvatarLightbox()" style="cursor:zoom-in;"><img id="avatarImg" src="/static/usericon/default.webp" alt="avatar" onerror="this.src='/static/usericon/default.webp'"></div>
+        <button class="change-avatar-btn" onclick="handleAvatarChange()">
+            <i class="fas fa-camera"></i> <span data-i18n="change_avatar">Profil rasmini o'zgartirish</span>
+        </button>
+        <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadAvatar(this)">
+        <div class="hero-name-row">
+            <span class="hero-name" id="heroNameText">AliBek</span>
+            <button class="edit-name-btn" onclick="toggleNameEdit()" id="editNameBtn" title="Ismni o'zgartirish">
+                <i class="fas fa-pen"></i>
+            </button>
+        </div>
+        <div class="hero-name-edit" id="heroNameEdit" style="display:none;">
+            <input type="text" id="heroNameInput" value="AliBek" maxlength="50">
+            <button class="hero-save-btn" onclick="saveHeroName()"><i class="fas fa-check"></i></button>
+            <button class="hero-cancel-btn" onclick="toggleNameEdit()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="hero-id">ID: 117033967693959922813</div>
+
+        <!-- Bio -->
+        <div class="hero-bio-row" id="heroBioRow">
+            <span class="hero-bio-text empty" id="heroBioText">
+                
+            </span>
+            
+            <button class="edit-bio-btn" onclick="showPremiumNotice()" title="Bio faqat premium uchun"><i class="fas fa-lock"></i></button>
+            
+        </div>
+        <div class="hero-bio-edit" id="heroBioEdit" style="display:none;">
+            <input type="text" id="heroBioInput" value="" maxlength="60" placeholder="Bio yozing (max 60)">
+            <button class="hero-bio-save" onclick="saveBio()"><i class="fas fa-check"></i></button>
+            <button class="hero-bio-cancel" onclick="toggleBioEdit()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card win">
+            <div class="icon"><i class="fas fa-trophy"></i></div>
+            <div class="stat-value">1</div>
+            <div class="stat-label" data-i18n="wins">G'alaba</div>
+        </div>
+        <div class="stat-card lose">
+            <div class="icon"><i class="fas fa-times-circle"></i></div>
+            <div class="stat-value">3</div>
+            <div class="stat-label" data-i18n="losses">Mag'lubiyat</div>
+        </div>
+        <div class="stat-card rating">
+            <div class="icon"><i class="fas fa-star"></i></div>
+            <div class="stat-value">952</div>
+            <div class="stat-label" data-i18n="rating">Reyting</div>
+        </div>
+        <div class="stat-card gems">
+            <div class="icon"><i class="fas fa-gem"></i></div>
+            <div class="stat-value">1</div>
+            <div class="stat-label" data-i18n="balance">Olmos</div>
+        </div>
+        <div class="stat-card refs">
+            <div class="icon"><i class="fas fa-user-friends"></i></div>
+            <div class="stat-value">0</div>
+            <div class="stat-label" data-i18n="referrals">Taklif</div>
+        </div>
+        <div class="stat-card draw">
+            <div class="icon"><i class="fas fa-gamepad"></i></div>
+            <div class="stat-value">4</div>
+            <div class="stat-label" data-i18n="total_games_label">O'yinlar</div>
+        </div>
+    </div>
+
+    <!-- WIN RATE -->
+    <div class="winrate-card">
+        <div class="winrate-header">
+            <span class="winrate-title"><i class="fas fa-chart-line" style="color:#667eea;margin-right:6px;"></i><span data-i18n="win_rate_title">G'alaba foizi</span></span>
+            <span class="winrate-percent" id="winrateText">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    
+    <div class="premium-tools-box">
+        <div class="premium-tools-title" data-i18n="premium_settings"><i class="fas fa-crown"></i> Premium sozlamalar</div>
+        
+        <div class="premium-tools-notice">
+            <i class="fas fa-lock"></i>
+            <span data-i18n-html="premium_locked_notice">Bu sozlamalar faqat <strong>&nbsp;Premium&nbsp;</strong> foydalanuvchilar uchun mavjud.</span>
+        </div>
+        
+        <div class="premium-tools-row">
+            <div class="premium-tools-top">
+                <span class="premium-tools-label" data-i18n="hide_losses_label">Mag'lubiyatni yashirish</span>
+                <button class="premium-tool-toggle  locked"
+                        id="toggle_hide_lose"
+                        onclick="showPremiumNotice()">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </button>
+            </div>
+            <div class="premium-tools-hint" data-i18n="hide_losses_hint">Boshqalar profilingizda mag'lubiyat sonini ko'ra olmaydi</div>
+        </div>
+        <div class="premium-tools-row">
+            <div class="premium-tools-top">
+                <span class="premium-tools-label" data-i18n="hide_draws_label">Durrangni yashirish</span>
+                <button class="premium-tool-toggle  locked"
+                        id="toggle_hide_draw"
+                        onclick="showPremiumNotice()">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </button>
+            </div>
+            <div class="premium-tools-hint" data-i18n="hide_draws_hint">Durrang natijalaringiz boshqalarga ko'rinmaydi</div>
+        </div>
+        <div class="premium-tools-row">
+            <div class="premium-tools-top">
+                <span class="premium-tools-label" data-i18n="hide_games_label">Jami o'yinlarni yashirish</span>
+                <button class="premium-tool-toggle  locked"
+                        id="toggle_hide_games"
+                        onclick="showPremiumNotice()">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </button>
+            </div>
+            <div class="premium-tools-hint" data-i18n="hide_games_hint">Nechta o'yin o'ynaganingiz hech kimga ko'rinmaydi</div>
+        </div>
+        <div class="premium-tools-row">
+            <div class="premium-tools-top">
+                <span class="premium-tools-label" data-i18n="hide_lastseen_label">So'nggi kirishni yashirish</span>
+                <button class="premium-tool-toggle  locked"
+                        id="toggle_hide_lastseen"
+                        onclick="showPremiumNotice()">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </button>
+            </div>
+            <div class="premium-tools-hint" data-i18n="hide_lastseen_hint">Oxirgi faollik vaqtingiz boshqalarga ko'rsatilmaydi</div>
+        </div>
+        <div class="premium-tools-row">
+            <div class="premium-tools-top">
+                <span class="premium-tools-label" data-i18n="block_watch_label">Jonli efirni bloklash</span>
+                <button class="premium-tool-toggle  locked"
+                        id="toggle_block_watch"
+                        onclick="showPremiumNotice()">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </button>
+            </div>
+            <div class="premium-tools-hint" data-i18n="block_watch_hint">Hech kim o'yiningizni jonli tomosha qila olmaydi</div>
+        </div>
+    </div>
+
+    <input type="hidden" id="nameInput" value="AliBek">
+    <div id="msg" class="msg" style="margin-bottom:10px;"></div>
+
+    <!-- REFERAL -->
+    <div class="section-card">
+        <div class="section-title">
+            <div class="dot"></div>
+            <span data-i18n="invite_friends_section">Do'stlarni taklif qilish</span>
+        </div>
+
+        <div class="ref-bonus">
+            <div class="ref-bonus-icon">💎</div>
+            <div class="ref-bonus-text" data-i18n-html="ref_bonus_text">
+                Har bir taklif qilgan do'stingiz uchun <strong>+10 olmos</strong> olasiz!
+            </div>
+        </div>
+
+        <div class="ref-link-box">
+            <input id="tgLinkInput" class="ref-link-input" readonly
+                value="https://t.me/shashka_gamebot/Shashka?startapp=ref117033967693959922813">
+            <button class="btn-copy" onclick="copyLink('tgLinkInput')">
+                <i class="fas fa-copy"></i> <span data-i18n="copy_btn">Nusxa</span>
+            </button>
+        </div>
+
+        <button class="btn-share" onclick="shareReferral()">
+            <i class="fas fa-share-alt"></i> <span data-i18n="share_btn">Ulashish</span>
+        </button>
+
+        <div id="copyMsg" class="copy-toast" data-i18n="copied_toast">✅ Nusxalandi!</div>
+    </div>
+
+    <!-- QOIDALAR -->
+    <div class="section-card">
+        <div class="section-title">
+            <div class="dot"></div>
+            <span data-i18n="game_rules_title">O'yin Qoidalari</span>
+        </div>
+
+        <ul class="rules-list">
+            <li>
+                <div class="rule-icon">🚫</div>
+                <span data-i18n="rule_1">Ismga bema'ni yoki ma'nosiz so'z yozish qat'iyan taqiqlanadi.</span>
+            </li>
+            <li>
+                <div class="rule-icon">💬</div>
+                <span data-i18n="rule_2">Chatda haqoratli yoki kamsituvchi so'zlar yozish mumkin emas.</span>
+            </li>
+            <li>
+                <div class="rule-icon">🤝</div>
+                <span data-i18n="rule_3">Barcha o'yinchilar o'zaro hurmat bilan muloqot qilishi shart.</span>
+            </li>
+        </ul>
+
+        <div class="rules-warning" data-i18n-html="rules_warning">
+            ⛔ <strong>Ogohlantirish:</strong> Qoidalarni buzgan foydalanuvchilar ogohlantirilmasdan bloklanadi.
+        </div>
+    </div>
+
+    <!-- BOSH SAHIFAGA -->
+    <a href="/" class="btn-home" data-i18n="back_to_home">
+        <i class="fas fa-home" style="margin-right:6px;"></i>Bosh sahifaga qaytish
+    </a>
+
+</div>
+
+<!-- Avatar Lightbox -->
+<div class="avatar-lightbox" id="avatarLightbox" onclick="closeAvatarLightbox()">
+    <img id="lightboxImg" src="" alt="avatar">
+</div>
+
+<!-- Premium Modal -->
+<div class="premium-overlay" id="premiumModal" onclick="closePremiumModal(event)">
+    <div class="premium-box">
+        <div class="premium-crown">👑</div>
+        <div class="premium-title" data-i18n="premium_modal_title">Premium Obuna</div>
+        <div class="premium-text" data-i18n-html="premium_modal_text">Bu funksiya faqat <strong>premium obunachilari</strong> uchun mavjud!</div>
+        <a href="/premium" class="premium-buy-btn" data-i18n="premium_buy_btn">⭐ Premium olish</a>
+        <button class="premium-close-btn" onclick="document.getElementById('premiumModal').classList.remove('active')" data-i18n="close_btn">Yopish</button>
+    </div>
+</div>
+
+<script>
+    function openAvatarLightbox() {
+        const src = document.getElementById('avatarImg').src;
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('avatarLightbox').classList.add('active');
+    }
+    function closeAvatarLightbox() {
+        document.getElementById('avatarLightbox').classList.remove('active');
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeAvatarLightbox();
+    });
+
+    function toggleNameEdit() {
+        const row  = document.getElementById('heroNameEdit');
+        const text = document.getElementById('heroNameText');
+        const nameRow = document.querySelector('.hero-name-row');
+        const isHidden = row.style.display === 'none';
+        row.style.display  = isHidden ? 'flex' : 'none';
+        nameRow.style.display = isHidden ? 'none' : 'flex';
+        if (isHidden) {
+            const inp = document.getElementById('heroNameInput');
+            inp.value = document.getElementById('heroNameText').textContent;
+            inp.focus();
+            inp.select();
+        }
+    }
+
+    function saveHeroName() {
+        const lang = localStorage.getItem('language') || 'uz';
+        const name = document.getElementById('heroNameInput').value.trim();
+        const msg  = document.getElementById('msg');
+        if (!name) return;
+
+        const lowerName = name.toLowerCase();
+        if (badWords.some(w => lowerName.includes(w))) {
+            alert(getTranslation('bad_word_warning', lang));
+            return;
+        }
+        if (!confirm(getTranslation('name_confirm_msg', lang))) return;
+
+        fetch("/profil", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('heroNameText').textContent = name;
+                document.getElementById('nameInput').value = name;
+                toggleNameEdit();
+                showMsg(msg, getTranslation('name_saved_msg', lang), "success");
+            } else {
+                showMsg(msg, data.error || getTranslation('error_occurred', lang), "error");
+            }
+        })
+        .catch(() => showMsg(msg, getTranslation('server_error', lang), "error"));
+    }
+
+    const _userStatus = 'simple';
+
+    function handleAvatarChange() {
+        if (_userStatus === 'premium') {
+            document.getElementById('avatarFileInput').click();
+        } else {
+            showPremiumNotice();
+        }
+    }
+
+    function uploadAvatar(input) {
+        const file = input.files[0];
+        input.value = '';
+        if (!file) return;
+
+        const lang = localStorage.getItem('language') || 'uz';
+        const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            alert(getTranslation('image_format_error', lang));
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert(getTranslation('image_size_error', lang));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const bytes = new Uint8Array(e.target.result.slice(0, 12));
+            const isPNG  = bytes[0]===0x89 && bytes[1]===0x50 && bytes[2]===0x4E && bytes[3]===0x47;
+            const isJPEG = bytes[0]===0xFF && bytes[1]===0xD8;
+            const isWEBP = bytes[8]===0x57 && bytes[9]===0x45 && bytes[10]===0x42 && bytes[11]===0x50;
+            if (!isPNG && !isJPEG && !isWEBP) {
+                alert(getTranslation('image_format_bytes_error', localStorage.getItem('language') || 'uz'));
+                return;
+            }
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const SIZE = 512;
+                canvas.width = SIZE;
+                canvas.height = SIZE;
+                const ctx = canvas.getContext('2d');
+                const scale = Math.max(SIZE / img.width, SIZE / img.height);
+                const sw = img.width * scale;
+                const sh = img.height * scale;
+                ctx.drawImage(img, (SIZE - sw) / 2, (SIZE - sh) / 2, sw, sh);
+                canvas.toBlob(function(blob) {
+                    const formData = new FormData();
+                    formData.append('icon', blob, 'avatar.png');
+                    fetch('/api/upload_usericon', { method: 'POST', body: formData })
+                        .then(r => r.json())
+                        .then(data => {
+                            const _lang = localStorage.getItem('language') || 'uz';
+                            if (data.ok) {
+                                document.querySelector('.avatar img').src = data.url + '?t=' + Date.now();
+                            } else {
+                                alert(data.error || getTranslation('error_occurred', _lang));
+                            }
+                        })
+                        .catch(() => alert(getTranslation('server_error', localStorage.getItem('language') || 'uz')));
+                }, 'image/png');
+            };
+            img.src = URL.createObjectURL(file);
+        };
+        reader.readAsArrayBuffer(file.slice(0, 12));
+    }
+
+    function showPremiumNotice() {
+        document.getElementById('premiumModal').classList.add('active');
+    }
+
+    function toggleBioEdit() {
+        const row  = document.getElementById('heroBioRow');
+        const edit = document.getElementById('heroBioEdit');
+        const open = edit.style.display === 'none';
+        row.style.display  = open ? 'none' : 'flex';
+        edit.style.display = open ? 'flex' : 'none';
+        if (open) document.getElementById('heroBioInput').focus();
+    }
+
+    function saveBio() {
+        const bio = document.getElementById('heroBioInput').value.trim();
+        fetch('/api/save_bio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bio })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.ok) {
+                const span = document.getElementById('heroBioText');
+                const cleanBio = d.bio || '';
+                span.textContent = cleanBio || 'Bio qo\'shish...';
+                span.classList.toggle('empty', !cleanBio);
+                document.getElementById('heroBioInput').value = cleanBio;
+                toggleBioEdit();
+            } else {
+                alert(d.error || 'Xatolik');
+            }
+        })
+        .catch(() => alert('Xatolik yuz berdi'));
+    }
+    function closePremiumModal(e) {
+        if (e.target === document.getElementById('premiumModal')) {
+            document.getElementById('premiumModal').classList.remove('active');
+        }
+    }
+
+    function toggleTool(tool) {
+        fetch('/api/premium_tool_toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tool: tool })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                const btn = document.getElementById('toggle_' + tool);
+                if (btn) btn.classList.toggle('active', data.active);
+            }
+        });
+    }
+</script>
+
+<script>
+    const _userId   = '117033967693959922813';
+    const _userWin  = 1;
+    const _userLose = 3;
+    const _tgLink   = `https://t.me/shashka_gamebot/Shashka?startapp=ref${_userId}`;
+    function _buildShareText() {
+        const lang = localStorage.getItem('language') || 'uz';
+        return getTranslation('share_intro_msg', lang) + '\n\n' +
+               getTranslation('share_via_tg', lang) + ' ' + _tgLink;
+    }
+
+    // Win rate progress
+    document.addEventListener('DOMContentLoaded', () => {
+        const total = _userWin + _userLose;
+        const rate  = total > 0 ? Math.round((_userWin / total) * 100) : 0;
+        document.getElementById('winrateText').textContent = rate + '%';
+        document.getElementById('progressFill').style.width = rate + '%';
+
+        const lang = localStorage.getItem('language') || 'uz';
+        document.documentElement.lang = lang;
+        if (typeof translatePage === 'function') translatePage(lang);
+    });
+
+    function copyLink(inputId) {
+        const input = document.getElementById(inputId);
+        navigator.clipboard.writeText(input.value).catch(() => {
+            input.select();
+            document.execCommand('copy');
+        });
+        const toast = document.getElementById('copyMsg');
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    function shareReferral() {
+        const lang = localStorage.getItem('language') || 'uz';
+        const _shareText = _buildShareText();
+        const _shareIntro = getTranslation('share_intro_msg', lang);
+        if (window.Telegram?.WebApp?.openTelegramLink) {
+            window.Telegram.WebApp.openTelegramLink(
+                `https://t.me/share/url?url=${encodeURIComponent(_tgLink)}&text=${encodeURIComponent(_shareIntro)}`
+            );
+            return;
+        }
+        if (navigator.share) {
+            navigator.share({ title: "Shashka O'yini", text: _shareText, url: _tgLink }).catch(() => _clipboardShare());
+            return;
+        }
+        _clipboardShare();
+    }
+
+    function _clipboardShare() {
+        const lang = localStorage.getItem('language') || 'uz';
+        const _shareText = _buildShareText();
+        navigator.clipboard.writeText(_shareText).then(() => {
+            alert(getTranslation('clipboard_copied_msg', lang) + '\n\n' + _shareText);
+        }).catch(() => {
+            window.prompt(getTranslation('copy_btn', lang) + ':', _shareText);
+        });
+    }
+
+    const badWords = [
+        "ahmoq","jinurs","seks","qotoq","extiros","ehtiros","q**v",
+        "sex","la'nati","behay","nopok","harom","hohliman","xoxlimam",
+        "bitch","asshole","shit","fuck","xohliman","dick","hoxliman",
+        "behayo","kalta","jinni","sotqincha","nopok","haromxo'r",
+        "sxx","qovoq","pashsha","itvachcha","mamma","qichigan"
+    ];
+
+    function saveName() {
+        const nameInput = document.getElementById("nameInput");
+        const name      = nameInput.value.trim();
+        const msg       = document.getElementById("msg");
+        const saveBtn   = document.querySelector('.btn-save');
+
+        const lang = localStorage.getItem('language') || 'uz';
+        if (!name) {
+            showMsg(msg, getTranslation('name_empty_error', lang), "error");
+            return;
+        }
+
+        const lowerName = name.toLowerCase();
+        if (badWords.some(w => lowerName.includes(w))) {
+            alert(getTranslation('bad_word_warning', lang));
+            return;
+        }
+
+        const proceed = confirm(getTranslation('name_confirm_msg', lang));
+        if (!proceed) return;
+
+        saveBtn.disabled = true;
+
+        fetch("/profil", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showMsg(msg, getTranslation('name_saved_msg', lang), "success");
+                document.querySelector('.hero-name').textContent = name;
+                setTimeout(() => {
+                    alert(getTranslation('name_saved_alert', lang));
+                }, 1500);
+            } else {
+                showMsg(msg, data.error || getTranslation('error_occurred', lang), "error");
+            }
+        })
+        .catch(() => showMsg(msg, getTranslation('server_error', lang), "error"))
+        .finally(() => { saveBtn.disabled = false; });
+    }
+
+    function showMsg(el, text, type) {
+        el.textContent = text;
+        el.className   = 'msg ' + type;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    document.getElementById("nameInput").addEventListener("keypress", e => {
+        if (e.key === "Enter") saveName();
+    });
+
+    document.getElementById("heroNameInput").addEventListener("keypress", e => {
+        if (e.key === "Enter") saveHeroName();
+    });
+</script>
+</body>
+</html>
