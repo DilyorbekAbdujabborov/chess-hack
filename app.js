@@ -941,6 +941,23 @@ app.get("/api/history", async (req, res) => {
     res.json({ ok: true, games });
   } catch(e) { res.status(500).json({ ok: false, msg: e.message }); }
 });
+app.get("/api/tournaments", async (req, res) => {
+  try {
+    const fetch = await getFetch();
+    const r = await fetch(CFG.base + "/tournaments", {
+      headers: { accept: "text/html", "user-agent": CFG.ua, cookie: cookieHeader() },
+    });
+    const html = await r.text();
+    const tournaments = [];
+    const re = /\/tournament\/([^"]+)[^>]*>([^<]+)<\/a>/g;
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      tournaments.push({ code: m[1], name: m[2].trim() });
+    }
+    res.json({ ok: true, tournaments });
+  } catch(e) { res.status(500).json({ ok: false, msg: e.message }); }
+});
+
 app.get("/api/profile", async (req, res) => {
   try {
     const fetch = await getFetch();
