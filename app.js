@@ -33,6 +33,70 @@ async function getFetch() {
   return _fetch;
 }
 
+// ─── OPENING BOOK ────────────────────────────────────────────────────────────
+const OPENING_BOOK = {
+  "I-1": "ab4", "I-2": "ba5", "I-3": "ab6", "I-4": "dc5", "I-5": "de5",
+  "II-1": "a1-a5", "II-2": "a7-h4", "II-3": "b6-g5", "II-4": "b6-h4",
+  "III-1": "bc5", "III-2": "ba5-cb4", "III-3": "ed4-fe5", "III-4": "ed4-fg5",
+  "III-5": "ed4-hg5", "III-6": "gf4-fe5", "III-7": "gh4", "III-8": "ba5-fg5",
+  "III-9": "dc5", "III-10": "bd6-ec5-gh4", "III-11": "bd6-ce5-ef4", "III-12": "de5",
+  "III-13": "ba5-fg5-ef4", "III-14": "ba5-fg5-gh4", "III-15": "ba3-fg5",
+  "III-16": "ba3-fg5-gf4", "III-17": "ed4-hg5-ba5", "III-18": "gh4",
+  "III-19": "fe5", "III-20": "ba5-ef4", "III-21": "ba5-gf6", "III-22": "ef4",
+  "III-23": "gh4-gf6"
+};
+
+function parseCoord(s) {
+  const from = s.substring(0, 2);
+  const to = s.substring(2, 4);
+  const fromCol = from.charCodeAt(0) - 97;
+  const fromRow = 8 - parseInt(from[1]);
+  const toCol = to.charCodeAt(0) - 97;
+  const toRow = 8 - parseInt(to[1]);
+  return { from_row: fromRow, from_col: fromCol, to_row: toRow, to_col: toCol };
+}
+
+function boardToMoves(b) {
+  const moves = [];
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const v = b[r][c];
+      if (!v) continue;
+      const isMine = state.myP === 1 ? isP1(v) : isP2(v);
+      if (!isMine) continue;
+      const dirs = moveDirs(v, state.myP);
+      for (const [dr, dc] of dirs) {
+        const nr = r + dr, nc = c + dc;
+        if (nr < 0 || nr > 7 || nc < 0 || nc > 7) continue;
+        if (b[nr][nc] === EMPTY) {
+          const fromSq = String.fromCharCode(97 + c) + (8 - r);
+          const toSq = String.fromCharCode(97 + nc) + (8 - nr);
+          moves.push(fromSq + toSq);
+        }
+      }
+    }
+  }
+  return moves;
+}
+
+function findOpeningMove(mvs) {
+  const myMovesStr = mvs.join(" ");
+  for (const [opening, recommended] of Object.entries(OPENING_BOOK)) {
+    if (myMovesStr.includes(recommended.split("-")[0])) {
+      const move = parseCoord(recommended);
+      const found = mvs.find(m =>
+        m.from_row === move.from_row && m.from_col === move.from_col &&
+        m.to_row === move.to_row && m.to_col === move.to_col
+      );
+      if (found) {
+        log(`📖 Opening: ${opening} → (${move.from_row},${move.from_col})→(${move.to_row},${move.to_col})`);
+        return found;
+      }
+    }
+  }
+  return null;
+}
+
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const CFG = {
   base:       "https://checkers.sifr.uz",
@@ -613,6 +677,25 @@ async function doMove() {
   });
 
   if (mvs.length === 0) mvs = allMvs(state.board, state.myP);
+
+  // Opening kitobidan tekshirish (faqat dastlabki 10 ta harakatda)
+  const openingMove = state.moves.length < 10 ? findOpeningMove(mvs) : null;
+  if (openingMove) {
+    thinking = false; state.thinking = false; thinkingSince = null;
+    log(`📖 Opening harakati: (${openingMove.from_row},${openingMove.from_col})→(${openingMove.to_row},${openingMove.to_col})`);
+    state.status = `📖 Opening: (${openingMove.from_row},${openingMove.from_col})→(${openingMove.to_row},${openingMove.to_col})`;
+    await new Promise(r => setTimeout(r, CFG.moveDelay + Math.random()*200));
+    socket.emit("game/make_move", {
+      game_code:    state.gameCode,
+      from_row:     openingMove.from_row,
+      from_col:     openingMove.from_col,
+      to_row:       openingMove.to_row,
+      to_col:       openingMove.to_col,
+      capture_path: openingMove.capture_path,
+    });
+    pushState();
+    return;
+  }
 
   // Minimax dan eng yaxshi harakatni top
   const bestMove = getBest(state.board, state.myP, mvs);
