@@ -17,14 +17,14 @@ const path       = require("path");
 const fs         = require("fs");
 const { io }     = require("socket.io-client");
 const { CookieJar } = require("tough-cookie");
-const FILE_DB = path.join(__dirname, "db.json");
+const FILE_DB = process.env.TMP || process.env.TEMP || "/tmp/db.json";
 
 function loadDb() {
   try { return JSON.parse(fs.readFileSync(FILE_DB, "utf8")); }
   catch { return { games: [] }; }
 }
 function saveDb(data) {
-  fs.writeFileSync(FILE_DB, JSON.stringify(data, null, 2));
+  try { fs.writeFileSync(FILE_DB, JSON.stringify(data, null, 2)); } catch(e) {}
 }
 
 let _fetch;
@@ -84,16 +84,23 @@ async function saveGameResult(code, result, eloChange) {
 }
 
 // ─── LOG ──────────────────────────────────────────────────────────────────────
-const LOG_FILE = path.join(__dirname, "req_log.txt");
 const T   = () => new Date().toISOString();
+let logFile;
 const log = (m) => {
   const msg = `[${T()}] ${m}`;
   console.log(msg);
-  fs.appendFileSync(LOG_FILE, msg + "\n");
+  try {
+    if (!logFile) logFile = fs.createWriteStream(path.join(process.env.TMP || "/tmp", "req_log.txt"), { flags: "a" });
+    logFile.write(msg + "\n");
+  } catch(e) {}
 };
 const reqLog = (method, url, reqBody, resStatus, resBody) => {
   const entry = `[${T()}] --> ${method} ${url}\nreq: ${JSON.stringify(reqBody)}\n<-- ${resStatus}\nres: ${JSON.stringify(resBody)}\n---\n`;
-  fs.appendFileSync(LOG_FILE, entry);
+  console.log(entry);
+  try {
+    if (!logFile) logFile = fs.createWriteStream(path.join(process.env.TMP || "/tmp", "req_log.txt"), { flags: "a" });
+    logFile.write(entry);
+  } catch(e) {}
 };
 
 // ─── SSE ──────────────────────────────────────────────────────────────────────
